@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S27 full connectivity recording</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: #17202a;
+      background: #eef1f4;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+                   "Segoe UI", sans-serif;
+    }
+    header {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      padding: 12px 18px;
+      border-bottom: 1px solid #d3d9df;
+      background: white;
+    }
+    h1 { margin: 0; font-size: 20px; }
+    label { margin-left: auto; font-size: 13px; font-weight: 700; }
+    select {
+      min-width: 150px;
+      margin-left: 7px;
+      padding: 7px 9px;
+      border: 1px solid #aeb7c0;
+      border-radius: 7px;
+      background: white;
+      font: inherit;
+    }
+    a { color: #315f9d; font-size: 13px; }
+    iframe {
+      display: block;
+      width: 100%;
+      height: calc(100vh - 62px);
+      min-height: 720px;
+      border: 0;
+      background: white;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>S27</h1>
+    <a href="index.html">Choose another subject</a>
+    <label>Connectivity type
+      <select id="methodSelect"><option value="DCI_perc">DCI_perc</option>
+<option value="Pearson">Pearson</option></select>
+    </label>
+  </header>
+  <iframe id="recordingFrame" title="S27 connectivity recording"></iframe>
+  <script>
+    "use strict";
+    const pages = {"DCI_perc": "full_S27_DCI_perc.html", "Pearson": "full_S27_Pearson.html"};
+    const selector = document.getElementById("methodSelect");
+    const frame = document.getElementById("recordingFrame");
+    function showMethod() { frame.src = pages[selector.value]; }
+    selector.value = "DCI_perc";
+    selector.addEventListener("change", showMethod);
+    showMethod();
+  </script>
+</body>
+</html>

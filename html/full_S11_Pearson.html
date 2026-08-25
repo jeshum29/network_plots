@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S11 Pearson — interactive timeline</title>
+  <style>
+    :root { --accent: #8172B2; --ink: #17202a; --muted: #5f6b76; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px;
+      color: var(--ink);
+      background: #f4f6f8;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+                   "Segoe UI", sans-serif;
+    }
+    .viewer {
+      width: min(900px, 100%);
+      margin: 0 auto;
+      padding: 18px 20px 24px;
+      border: 1px solid #d8dde3;
+      border-radius: 14px;
+      background: white;
+      box-shadow: 0 12px 35px rgba(26, 36, 46, 0.12);
+    }
+    h1 {
+      min-height: 1.5em;
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: clamp(17px, 2.6vw, 25px);
+      line-height: 1.35;
+      text-align: center;
+    }
+    video {
+      display: block;
+      width: 100%;
+      max-height: 72vh;
+      border-radius: 10px;
+      background: white;
+      cursor: pointer;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: auto auto auto 1fr auto;
+      gap: 8px;
+      align-items: center;
+      margin-top: 14px;
+    }
+    button, .download {
+      min-height: 36px;
+      border: 1px solid #c7cdd4;
+      border-radius: 8px;
+      padding: 7px 11px;
+      color: var(--ink);
+      background: white;
+      font: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    button:hover, button:focus-visible, .download:hover, .download:focus-visible {
+      border-color: var(--accent);
+      outline: 2px solid color-mix(in srgb, var(--accent) 25%, transparent);
+    }
+    #playPause {
+      border-color: var(--accent);
+      color: white;
+      background: var(--accent);
+      font-weight: 700;
+    }
+    #currentClock {
+      justify-self: end;
+      min-width: 116px;
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+      text-align: right;
+    }
+    .timeline {
+      position: relative;
+      margin: 22px 9px 0;
+      padding-bottom: 62px;
+    }
+    #scrubber {
+      position: relative;
+      z-index: 3;
+      width: 100%;
+      height: 24px;
+      margin: 0;
+      accent-color: var(--accent);
+      cursor: ew-resize;
+    }
+    .markers {
+      position: absolute;
+      z-index: 2;
+      top: 28px;
+      right: 0;
+      left: 0;
+      height: 48px;
+      border-top: 1px solid #9aa4ae;
+    }
+    .marker {
+      position: absolute;
+      top: -6px;
+      min-width: 58px;
+      padding: 14px 2px 0;
+      transform: translateX(-50%);
+      border: 0;
+      color: var(--muted);
+      background: transparent;
+      font-size: 10px;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.15;
+      white-space: pre-line;
+    }
+    .marker::before {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 2px;
+      height: 10px;
+      border-radius: 2px;
+      background: var(--accent);
+      content: "";
+    }
+    .marker::after {
+      position: absolute;
+      top: -3px;
+      left: calc(50% - 4px);
+      width: 8px;
+      height: 8px;
+      border: 1px solid white;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent);
+      content: "";
+    }
+    .hint {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+    }
+    .no-markers {
+      padding-top: 13px;
+      color: var(--muted);
+      font-size: 11px;
+      text-align: center;
+    }
+    @media (max-width: 650px) {
+      body { padding: 8px; }
+      .viewer { padding: 12px 10px 18px; }
+      .controls { grid-template-columns: auto auto auto 1fr; }
+      .download { display: none; }
+      #currentClock { min-width: 98px; font-size: 12px; }
+      .marker { min-width: 48px; font-size: 9px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="viewer" id="viewer" tabindex="0">
+    <h1 id="heading">S11   Pearson   —   Day 1  13:57</h1>
+    <video id="networkVideo" preload="metadata" playsinline aria-label="Connectivity animation">
+      <source src="../videos/full_S11_Pearson.mp4" type="video/mp4">
+      Your browser does not support HTML5 video.
+    </video>
+
+    <div class="controls">
+      <button id="previousFrame" type="button" title="Previous rendered frame">&#9664; Frame</button>
+      <button id="playPause" type="button">Play</button>
+      <button id="nextFrame" type="button" title="Next rendered frame">Frame &#9654;</button>
+      <output id="currentClock" aria-live="polite">Day 1  13:57</output>
+      <a class="download" href="../videos/full_S11_Pearson.mp4" download>Download video</a>
+    </div>
+
+    <div class="timeline">
+      <input id="scrubber" type="range" min="0" max="101" value="0" step="1"
+             aria-label="Choose recording time">
+      <div class="markers" id="markers" aria-label="Six-hour time markers"></div>
+    </div>
+    <p class="hint">Drag the timeline, click a 00:00/06:00/12:00/18:00 marker, or use the frame buttons. Times use a 24-hour clock.</p>
+  </main>
+
+  <script>
+    "use strict";
+    const subject = "S11";
+    const method = "Pearson";
+    const fps = 30.0;
+    const frameRows = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101];
+    const frameLabels = ["Day 1  13:57", "Day 1  13:58", "Day 1  13:59", "Day 1  14:00", "Day 1  14:01", "Day 1  14:02", "Day 1  14:03", "Day 1  14:04", "Day 1  14:05", "Day 1  14:06", "Day 1  14:07", "Day 1  14:08", "Day 1  14:09", "Day 1  14:10", "Day 1  14:11", "Day 1  14:12", "Day 1  14:13", "Day 1  14:14", "Day 1  14:15", "Day 1  14:16", "Day 1  14:17", "Day 1  14:18", "Day 1  14:19", "Day 1  14:20", "Day 1  14:21", "Day 1  14:22", "Day 1  14:23", "Day 1  14:24", "Day 1  14:25", "Day 1  14:26", "Day 1  14:27", "Day 1  14:28", "Day 1  14:29", "Day 1  14:30", "Day 1  14:31", "Day 1  14:32", "Day 1  14:33", "Day 1  14:34", "Day 1  14:35", "Day 1  14:36", "Day 1  14:37", "Day 1  14:38", "Day 1  14:39", "Day 1  14:40", "Day 1  14:41", "Day 1  14:42", "Day 1  14:43", "Day 1  14:44", "Day 1  14:45", "Day 1  14:46", "Day 1  14:47", "Day 1  14:48", "Day 1  14:49", "Day 1  14:50", "Day 1  14:51", "Day 1  14:52", "Day 1  14:53", "Day 1  14:54", "Day 1  14:55", "Day 1  14:56", "Day 1  14:57", "Day 1  14:58", "Day 1  14:59", "Day 1  15:00", "Day 1  15:01", "Day 1  15:02", "Day 1  15:03", "Day 1  15:04", "Day 1  15:05", "Day 1  15:06", "Day 1  15:07", "Day 1  15:08", "Day 1  15:09", "Day 1  15:10", "Day 1  15:11", "Day 1  15:12", "Day 1  15:13", "Day 1  15:14", "Day 1  15:15", "Day 1  15:16", "Day 1  15:17", "Day 1  15:18", "Day 1  15:19", "Day 1  15:20", "Day 1  15:21", "Day 1  15:22", "Day 1  15:23", "Day 1  15:24", "Day 1  15:25", "Day 1  15:26", "Day 1  15:27", "Day 1  15:28", "Day 1  15:29", "Day 1  15:30", "Day 1  15:31", "Day 1  15:32", "Day 1  15:33", "Day 1  15:34", "Day 1  15:35", "Day 1  15:36", "Day 1  15:37", "Day 1  15:38"];
+    const timePoints = [];
+    const lastRow = 101;
+
+    const viewer = document.getElementById("viewer");
+    const video = document.getElementById("networkVideo");
+    const scrubber = document.getElementById("scrubber");
+    const heading = document.getElementById("heading");
+    const currentClock = document.getElementById("currentClock");
+    const playPause = document.getElementById("playPause");
+    const previousFrame = document.getElementById("previousFrame");
+    const nextFrame = document.getElementById("nextFrame");
+    const markerLayer = document.getElementById("markers");
+    let dragging = false;
+
+    function clampFrameIndex(index) {
+      return Math.max(0, Math.min(frameRows.length - 1, index));
+    }
+
+    function frameIndexFromVideo() {
+      return clampFrameIndex(Math.floor(video.currentTime * fps + 1e-6));
+    }
+
+    function closestFrameIndex(row) {
+      let low = 0;
+      let high = frameRows.length - 1;
+      while (low < high) {
+        const middle = Math.floor((low + high) / 2);
+        if (frameRows[middle] < row) low = middle + 1;
+        else high = middle;
+      }
+      if (low === 0) return 0;
+      const before = low - 1;
+      return Math.abs(frameRows[low] - row) < Math.abs(frameRows[before] - row)
+        ? low : before;
+    }
+
+    function showFrame(index) {
+      const safeIndex = clampFrameIndex(index);
+      const label = frameLabels[safeIndex];
+      scrubber.value = String(frameRows[safeIndex]);
+      heading.textContent = `${subject}   ${method}   —   ${label}`;
+      currentClock.textContent = label;
+    }
+
+    function seekToFrame(index) {
+      const safeIndex = clampFrameIndex(index);
+      video.currentTime = safeIndex / fps;
+      showFrame(safeIndex);
+    }
+
+    function seekToRow(row) {
+      seekToFrame(closestFrameIndex(Number(row)));
+    }
+
+    function updatePlayButton() {
+      playPause.textContent = video.paused ? "Play" : "Pause";
+    }
+
+    async function togglePlayback() {
+      if (video.paused) await video.play();
+      else video.pause();
+    }
+
+    timePoints.forEach((point) => {
+      const marker = document.createElement("button");
+      marker.type = "button";
+      marker.className = "marker";
+      marker.style.left = `${lastRow > 0 ? (100 * point.row / lastRow) : 0}%`;
+      marker.textContent = point.label.replace("  ", "\n");
+      marker.title = `Seek to ${point.kind.toLowerCase()}: ${point.label}`;
+      marker.setAttribute("aria-label", marker.title);
+      marker.addEventListener("click", () => seekToRow(point.row));
+      markerLayer.appendChild(marker);
+    });
+    if (timePoints.length === 0) {
+      const note = document.createElement("div");
+      note.className = "no-markers";
+      note.textContent = "No six-hour clock boundary occurs inside this recording.";
+      markerLayer.appendChild(note);
+    }
+
+    scrubber.addEventListener("pointerdown", () => { dragging = true; });
+    window.addEventListener("pointerup", () => { dragging = false; });
+    scrubber.addEventListener("input", () => seekToRow(scrubber.value));
+    video.addEventListener("timeupdate", () => {
+      if (!dragging) showFrame(frameIndexFromVideo());
+    });
+    video.addEventListener("seeked", () => showFrame(frameIndexFromVideo()));
+    video.addEventListener("play", updatePlayButton);
+    video.addEventListener("pause", updatePlayButton);
+    video.addEventListener("ended", updatePlayButton);
+    video.addEventListener("click", togglePlayback);
+    playPause.addEventListener("click", togglePlayback);
+    previousFrame.addEventListener("click", () => {
+      video.pause();
+      seekToFrame(frameIndexFromVideo() - 1);
+    });
+    nextFrame.addEventListener("click", () => {
+      video.pause();
+      seekToFrame(frameIndexFromVideo() + 1);
+    });
+    viewer.addEventListener("keydown", (event) => {
+      if (event.key === " " || event.key === "k") {
+        event.preventDefault();
+        togglePlayback();
+      } else if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        video.pause();
+        seekToFrame(frameIndexFromVideo() - 1);
+      } else if (event.key === "ArrowRight") {
+        event.preventDefault();
+        video.pause();
+        seekToFrame(frameIndexFromVideo() + 1);
+      }
+    });
+
+    showFrame(0);
+    updatePlayButton();
+  </script>
+</body>
+</html>
